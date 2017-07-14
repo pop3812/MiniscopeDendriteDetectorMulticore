@@ -123,6 +123,12 @@ cell_sig = CellsortApplyFilter_dendrite(ms, ica_segments, [], movm, subtractmean
 figure(2)
 CellsortICAplot_dendrite('contour', ica_segments, cell_sig, f0, tlim, dt, 1, 2, [1:size(ica_segments,1)], spt, spc);
 
+%% Further analysis
+addpath([cd, '\results_analysis']);
+
+% 1. Correlation matrix
+correlation_analysis(cell_sig, segcentroid);
+
 % ms = CellsortPipeline(ms, file_path);
 
 %% original (주석 처리)
