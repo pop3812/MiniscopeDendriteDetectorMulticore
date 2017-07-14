@@ -1,0 +1,21 @@
+function [ corr_matrix ] = correlation_analysis(cell_sig, segcentroid)
+%CORRELATION_ANALYSIS 이 함수의 요약 설명 위치
+%   자세한 설명 위치
+
+n_cell = size(cell_sig, 1);
+corr_matrix = corrcoef(cell_sig');
+
+figure; imagesc(corr_matrix);
+
+for i=1:n_cell
+   if i>1
+    for j=1:i-1
+        % 거리 구하기
+        segcentroid(i,:)-segcentroid(j,:)
+        % correlation 구하기
+    end
+   end
+end
+
+end
+
