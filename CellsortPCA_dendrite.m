@@ -230,28 +230,28 @@ toc
 
         if (dsamp_space==1)
             mov = zeros(pixw, pixh, nt);
-            for jjind=1:length(useframes)
+            disp(' Reading frames...')
+            parfor jjind=1:length(useframes)
                 jj = useframes(jjind);
                 mov(:,:,jjind) = msReadFrame(ms, jj, true, true, false);
-                if mod(jjind,500)==1
-                    fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
-                    toc
-                end
+%                 if mod(jjind,500)==1
+%                     fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
+%                     toc
+%                 end
             end
         else
             [pixw_dsamp,pixh_dsamp] = size(imresize( msReadFrame(ms, 1, true, true, false), 1/dsamp_space, 'bilinear' ));
             mov = zeros(pixw_dsamp, pixh_dsamp, nt);
-            for jjind=1:length(useframes)
+            parfor jjind=1:length(useframes)
                 jj = useframes(jjind);
                 mov(:,:,jjind) = imresize( msReadFrame(ms, jj, true, true, false), 1/dsamp_space, 'bilinear' );
-                if mod(jjind,500)==1
-                    fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
-                    toc
-                end
+%                 if mod(jjind,500)==1
+%                     fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
+%                     toc
+%                 end
             end
         end
-
-        fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
+        fprintf(' Read frame %4.0f out of %4.0f; ', length(useframes), nt)
         toc
         mov = reshape(mov, npix1, nt);
 

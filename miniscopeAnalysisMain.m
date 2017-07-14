@@ -21,7 +21,7 @@ vessel_threshold = 0.1;                                                    % 이 
 space_down_samp_rate = 2;                                                  % 공간상 다운 샘플링 (기본값 = 2)
 smwidth = 3;                                                               % Smoothing 필터 크기 (기본값 = 3)
 thresh = 2;                                                                % Segment detection threshold (기본값 = 2)
-arealims = 350;                                                            % Segment 크기 제한 (기본값 = 750)
+arealims = [400 1800];                                                     % Segment 크기 제한 (기본값 = 750)
 plotting_segment = 1;                                                      % Segmentation 과정 플롯팅 여부
 
 % Deconvolution 관련 변수
@@ -93,7 +93,7 @@ PCuse=CellsortPlotPCspectrum_dendrite(ms, file_path, CovEvals, PCuse);
 mu=0.15; % the recommended value of mu in the original paper = 0.1-0.2
 nIC=size(PCuse,2);
 
-nIC=min([80, nIC]); %%%
+% nIC=min([80, nIC]); %%%
 [ica_sig, ica_filters, ica_A, numiter] = CellsortICA_dendrite(mixedsig, mixedfilters, CovEvals, PCuse, mu, nIC) ;
 
 mode = 'contour'; % 'contour' or 'series'
@@ -110,7 +110,7 @@ dt = 1./ms.vidObj{1}.FrameRate;
 
 %% Apply filter & Find spikes (Deconvolution)
 
-subtractmean = 0;
+subtractmean = 1;
 
 % 세포 신호 추출
 cell_sig = CellsortApplyFilter_dendrite(ms, ica_segments, [], movm, subtractmean);
@@ -118,15 +118,17 @@ cell_sig = CellsortApplyFilter_dendrite(ms, ica_segments, [], movm, subtractmean
 % Spike detection (Deconvolution)
 [spmat, spt, spc] = CellsortFindspikes_dendrite(cell_sig, spike_thresh, dt, deconvtau, normalization);
 
-%% Show results
-
+% Show results
 figure(2)
 CellsortICAplot_dendrite('contour', ica_segments, cell_sig, f0, tlim, dt, 1, 2, [1:size(ica_segments,1)], spt, spc);
 
 %% Further analysis
 addpath([cd, '\results_analysis']);
 
-% 1. Correlation matrix
+% Result movie with segmentation
+% msPlayVidObj(ms, down_sampling_rate,true,true,true, true, ica_segments);
+
+% Correlation matrix
 correlation_analysis(cell_sig, segcentroid);
 
 % ms = CellsortPipeline(ms, file_path);
