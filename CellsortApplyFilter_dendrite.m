@@ -44,6 +44,7 @@ k=0;
 cell_sig = zeros(size(ica_segments,1), nt);
 ica_segments = reshape(ica_segments, [], pixw*pixh);
 
+fprintf('-------------- CellsortApplyFilter %s -------------- \n', date)
 fprintf('Loading %5g frames for %d ROIs.\n', nt, size(ica_segments,1))
 while k<nt
     tic

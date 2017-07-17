@@ -110,7 +110,7 @@ dt = 1./ms.vidObj{1}.FrameRate;
 
 %% Apply filter & Find spikes (Deconvolution)
 
-subtractmean = 1;
+subtractmean = 0;
 
 % 세포 신호 추출
 cell_sig = CellsortApplyFilter_dendrite(ms, ica_segments, [], movm, subtractmean);
