@@ -2,11 +2,12 @@ function msPlayVidObj(vidObj,downSamp,columnCorrect, align, dFF, overlay, ica_se
 %MSPLAYVIDOBJ Summary of this function goes here
 %   Detailed explanation goes here
  hSmall = fspecial('average', 2);
- 
+
     for frameNum=1:downSamp:vidObj.numFrames
-                        
+             
         frame = msReadFrame(vidObj,frameNum,columnCorrect,align,dFF);
         frame = filter2(hSmall,frame);
+
         if ~overlay
         pcolor(frame);
         end
@@ -85,12 +86,16 @@ function msPlayVidObj(vidObj,downSamp,columnCorrect, align, dFF, overlay, ica_se
 %             
 %             hold off
         end
-
+        
         title(['Frame: ' num2str(frameNum) '/' num2str(vidObj.numFrames)]);
+
         shading flat
         set(gca,'Ydir','reverse') 
         daspect([1 1 1])
-    drawnow
+
+    
+%     drawnow
+    pause(0.01);    
     end
     
 end

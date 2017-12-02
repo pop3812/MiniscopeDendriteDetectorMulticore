@@ -7,7 +7,7 @@
 use_parallel_processing = 1;                                               % 멀티코어 사용할지 여부
 
 % 파일 읽기 관련 변수
-file_path = 'C:\Users\pop38\Documents\카카오톡 받은 파일\sample_data';       % 데이터 디렉토리
+file_path = 'D:\Data\20171201_CAG\tail_suspension_1';                                         % 데이터 디렉토리
 down_sampling_rate = 5;                                                    % 다운 샘플링 (프레임) 
 % down_sample_segmentation = 5;                                               
 
@@ -15,13 +15,13 @@ down_sampling_rate = 5;                                                    % 다�
 plotting_alignment = false;                                                % 보정 과정 플롯팅 여부
 
 % 혈관 및 배경 제거 관련 변수
-vessel_threshold = 0.1;                                                    % 이 값보다 픽셀 값이 계속 낮으면
+vessel_threshold = 0;                                                    % 이 값보다 픽셀 값이 계속 낮으면
                                                                            % 혈관 또는 배경으로 보고 제거 (기본값 = 0.1)
 % Segmentation 관련 변수
-space_down_samp_rate = 2;                                                  % 공간상 다운 샘플링 (기본값 = 2)
+space_down_samp_rate = 1;                                                  % 공간상 다운 샘플링 (기본값 = 2)
 smwidth = 3;                                                               % Smoothing 필터 크기 (기본값 = 3)
 thresh = 2;                                                                % Segment detection threshold (기본값 = 2)
-arealims = [400 1800];                                                     % Segment 크기 제한 (기본값 = 750)
+arealims = [100 2500];                                                     % Segment 크기 제한 (기본값 = 750) [400 1800]
 plotting_segment = 1;                                                      % Segmentation 과정 플롯팅 여부
 
 % Deconvolution 관련 변수
@@ -63,128 +63,131 @@ toc
 ms = msMeanFrame(ms,down_sampling_rate);                                   % 평균 프레임 계산
 
 %% Manually inspect and select best alignment
-ms = msSelectAlignment(ms);                                                
+ms = msSelectAlignment(ms);         
 
 %% Thresholding for vessel & blot elimination - added by Kwang
 % if signal is too low, regard it as artifact
 ms = msVesselRemoval(ms, vessel_threshold);
 
-%% Segment Sessions
-% dFF만 넘겨주면 다른 method로 segmentation
-% Reference: Mukamel et al. Neuron, 2009.
+%% Export aligned video as .avi file
+msExportAligned(ms, true);
 
-% 결과 비디오 한 번 보기
-% msPlayVidObj(ms, down_sampling_rate,true,true,true, false);
-
-% ----- pipeline에 들어갈 내용들 -----
-ms.space_down_samp_rate = space_down_samp_rate;
-
-% Read movie data and perform singular-value decomposition (SVD) dimensional reduction.
-[mixedsig, mixedfilters, CovEvals, covtrace, movm, movtm] = CellsortPCA_dendrite(ms, file_path);
-
-%  Allows the user to select which principal components will be kept following dimensional reduction.
-% [PCuse] = CellsortChoosePCs_dendrite(ms, mixedfilters);
-
-%  Plot the principal component (PC) spectrum and compare with the corresponding random-matrix noise floor
-PCuse=[];
-PCuse=CellsortPlotPCspectrum_dendrite(ms, file_path, CovEvals, PCuse);
-
-%%  Perform ICA with a standard set of parameters, including skewness as the objective function
-mu=0.15; % the recommended value of mu in the original paper = 0.1-0.2
-nIC=size(PCuse,2);
-
-% nIC=min([80, nIC]); %%%
-[ica_sig, ica_filters, ica_A, numiter] = CellsortICA_dendrite(mixedsig, mixedfilters, CovEvals, PCuse, mu, nIC) ;
-
-mode = 'contour'; % 'contour' or 'series'
-representative_mode = 'max'; % 'max' or 'avg'
-% CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc);
-ms = msRepresentative_dFF(ms, down_sampling_rate, representative_mode); % calculate mean dFF
-f0 = ms.meandFF;
-
-tlim = [0 ms.vidObj{1}.Duration];
-dt = 1./ms.vidObj{1}.FrameRate;
-% CellsortICAplot_dendrite(mode, ica_filters, ica_sig, f0, tlim, dt);
-
-[ica_segments, segmentlabel, segcentroid] = CellsortSegmentation_dendrite(ica_filters, smwidth, thresh, arealims, plotting_segment);
-
-%% Apply filter & Find spikes (Deconvolution)
-
-subtractmean = 0;
-
-% 세포 신호 추출
-cell_sig = CellsortApplyFilter_dendrite(ms, ica_segments, [], movm, subtractmean);
-
-% Spike detection (Deconvolution)
-[spmat, spt, spc] = CellsortFindspikes_dendrite(cell_sig, spike_thresh, dt, deconvtau, normalization);
-
-% Show results
-figure(2)
-CellsortICAplot_dendrite('contour', ica_segments, cell_sig, f0, tlim, dt, 1, 2, [1:size(ica_segments,1)], spt, spc);
-
-%% Further analysis
-addpath([cd, '\results_analysis']);
-
-% Result movie with segmentation
-% msPlayVidObj(ms, down_sampling_rate,true,true,true, true, ica_segments);
-
-% Correlation matrix
-correlation_analysis(cell_sig, segcentroid);
-
-% ms = CellsortPipeline(ms, file_path);
-
-%% original (주석 처리)
-% plotting = true;
-% area_threshold = 200;
-% ms = msFindBrightSpotsForDendrites(ms,down_sample_segmentation,[],.001,0.03, area_threshold, plotting);
-% disp('a');
-% ms = msAutoSegmentForDendrites(ms,[],[500 10000],down_sampling_rate,.90,plotting);
+% %% Segment Sessions
+% % dFF만 넘겨주면 다른 method로 segmentation
+% % Reference: Mukamel et al. Neuron, 2009.
 % 
-% %% Calculate Segment relationships
-% calcCorr = false;
-% calcDist = true;
-% calcOverlap = true;
-% ms = msCalcSegmentRelations(ms, calcCorr, calcDist, calcOverlap);
+% % 결과 비디오 한 번 보기
+% % msPlayVidObj(ms, down_sampling_rate,true,true,true, false);
 % 
-% %% Clean Segments
-% corrThresh = [];
-% distThresh = 7;
-% overlapThresh = .8;
-% ms = msCleanSegments(ms,corrThresh,distThresh,overlapThresh);
+% % ----- pipeline에 들어갈 내용들 -----
+% ms.space_down_samp_rate = space_down_samp_rate;
 % 
-% %% Calculate Segment relationships
-% calcCorr = false;
-% calcDist = true;
-% calcOverlap = true;
-% ms = msCalcSegmentRelations(ms, calcCorr, calcDist, calcOverlap);
+% % Read movie data and perform singular-value decomposition (SVD) dimensional reduction.
+% [mixedsig, mixedfilters, CovEvals, covtrace, movm, movtm] = CellsortPCA_dendrite(ms, file_path);
 % 
-% %% Calculate segment centroids
-% ms = msSegmentCentroids(ms);
+% %  Allows the user to select which principal components will be kept following dimensional reduction.
+% % [PCuse] = CellsortChoosePCs_dendrite(ms, mixedfilters);
 % 
-% %% Extract dF/F
-% ms = msExtractdFFTraces(ms);
-% ms = msCleandFFTraces(ms);
-% ms = msExtractFiring(ms);
+% %  Plot the principal component (PC) spectrum and compare with the corresponding random-matrix noise floor
+% PCuse=[];
+% PCuse=CellsortPlotPCspectrum_dendrite(ms, file_path, CovEvals, PCuse);
 % 
-% %% Align across sessions
-% % ms = msAlignBetweenSessions(msRef,ms);
+% %%  Perform ICA with a standard set of parameters, including skewness as the objective function
+% mu=0.15; % the recommended value of mu in the original paper = 0.1-0.2
+% nIC=size(PCuse,2);
 % 
-% %% Count segments in common field
-% % msBatchSegmentsInField(pwd);
+% % nIC=min([80, nIC]); %%%
+% [ica_sig, ica_filters, ica_A, numiter] = CellsortICA_dendrite(mixedsig, mixedfilters, CovEvals, PCuse, mu, nIC) ;
 % 
-% %% Match segments across sessions
-% % distThresh = 5;
-% % msBatchMatchSegmentsBetweenSessions(pwd, distThresh);
+% mode = 'contour'; % 'contour' or 'series'
+% representative_mode = 'max'; % 'max' or 'avg'
+% % CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc);
+% ms = msRepresentative_dFF(ms, down_sampling_rate, representative_mode); % calculate mean dFF
+% f0 = ms.meandFF;
 % 
+% tlim = [0 ms.vidObj{1}.Duration];
+% dt = 1./ms.vidObj{1}.FrameRate;
+% % CellsortICAplot_dendrite(mode, ica_filters, ica_sig, f0, tlim, dt);
 % 
-% %% BEHAV STUFF
+% [ica_segments, segmentlabel, segcentroid] = CellsortSegmentation_dendrite(ica_filters, smwidth, thresh, arealims, plotting_segment);
 % 
-% %% Generate behav.m
-% behav = msGenerateVideoObj(pwd,'behavCam');
+% %% Apply filter & Find spikes (Deconvolution)
 % 
-% %% Select ROI and HSV for tracking
-% behav = msSelectPropsForTracking(behav); 
+% subtractmean = 0;
 % 
-% %% Extract position
-% trackLength = 200;%cm
-% behav = msExtractBehavoir(behav, trackLength); 
+% % 세포 신호 추출
+% cell_sig = CellsortApplyFilter_dendrite(ms, ica_segments, [], movm, subtractmean);
+% 
+% % Spike detection (Deconvolution)
+% [spmat, spt, spc] = CellsortFindspikes_dendrite(cell_sig, spike_thresh, dt, deconvtau, normalization);
+% 
+% % Show results
+% figure(2)
+% CellsortICAplot_dendrite('contour', ica_segments, cell_sig, f0, tlim, dt, 1, 2, [1:size(ica_segments,1)], spt, spc);
+% 
+% %% Further analysis
+% addpath([cd, '\results_analysis']);
+% 
+% % Result movie with segmentation
+% % msPlayVidObj(ms, down_sampling_rate,true,true,true, true, ica_segments);
+% 
+% % Correlation matrix
+% correlation_analysis(cell_sig, segcentroid);
+% 
+% % ms = CellsortPipeline(ms, file_path);
+% 
+% %% original (주석 처리)
+% % plotting = true;
+% % area_threshold = 200;
+% % ms = msFindBrightSpotsForDendrites(ms,down_sample_segmentation,[],.001,0.03, area_threshold, plotting);
+% % disp('a');
+% % ms = msAutoSegmentForDendrites(ms,[],[500 10000],down_sampling_rate,.90,plotting);
+% % 
+% % %% Calculate Segment relationships
+% % calcCorr = false;
+% % calcDist = true;
+% % calcOverlap = true;
+% % ms = msCalcSegmentRelations(ms, calcCorr, calcDist, calcOverlap);
+% % 
+% % %% Clean Segments
+% % corrThresh = [];
+% % distThresh = 7;
+% % overlapThresh = .8;
+% % ms = msCleanSegments(ms,corrThresh,distThresh,overlapThresh);
+% % 
+% % %% Calculate Segment relationships
+% % calcCorr = false;
+% % calcDist = true;
+% % calcOverlap = true;
+% % ms = msCalcSegmentRelations(ms, calcCorr, calcDist, calcOverlap);
+% % 
+% % %% Calculate segment centroids
+% % ms = msSegmentCentroids(ms);
+% % 
+% % %% Extract dF/F
+% % ms = msExtractdFFTraces(ms);
+% % ms = msCleandFFTraces(ms);
+% % ms = msExtractFiring(ms);
+% % 
+% % %% Align across sessions
+% % % ms = msAlignBetweenSessions(msRef,ms);
+% % 
+% % %% Count segments in common field
+% % % msBatchSegmentsInField(pwd);
+% % 
+% % %% Match segments across sessions
+% % % distThresh = 5;
+% % % msBatchMatchSegmentsBetweenSessions(pwd, distThresh);
+% % 
+% % 
+% % %% BEHAV STUFF
+% % 
+% % %% Generate behav.m
+% % behav = msGenerateVideoObj(pwd,'behavCam');
+% % 
+% % %% Select ROI and HSV for tracking
+% % behav = msSelectPropsForTracking(behav); 
+% % 
+% % %% Extract position
+% % trackLength = 200;%cm
+% % behav = msExtractBehavoir(behav, trackLength); 

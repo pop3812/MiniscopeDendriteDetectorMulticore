@@ -5,7 +5,7 @@ function ms = msSelectAlignment(ms)
     for ROINum=1:size(ms.alignmentROI,2)
         subplot(2,size(ms.alignmentROI,2),ROINum)               
         alignH2 = hist2(ms.hShift(:,ROINum) ,ms.wShift(:,ROINum),bins,bins);
-        pcolorCentered(bins,bins,log10(alignH2));
+        pcolorCentered(bins,bins,log10(alignH2'));
         daspect([1 1 1]);
         h = colorbar;
         ylabel(h,'Log Counts')
