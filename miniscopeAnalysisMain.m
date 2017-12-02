@@ -1,13 +1,15 @@
 %% Multicore miniscope analysis tool
 % 2017 July by yakwang
 % optimized for MATLAB R2017a w/ Parallel processing toolbox
+% optimized for the preprocessing of miniscope data before CNMF-E
 
 %% 사용자 변수 지정
 % 시스템 설정
 use_parallel_processing = 1;                                               % 멀티코어 사용할지 여부
 
 % 파일 읽기 관련 변수
-file_path = 'D:\Data\20171201_CAG\tail_suspension_1';                                         % 데이터 디렉토리
+% file_path = 'D:\Data\20171201_CAG\tail_suspension_1';                                        
+file_path = uigetdir('','Select Directory of Your Experiment');            % 데이터 디렉토리
 down_sampling_rate = 5;                                                    % 다운 샘플링 (프레임) 
 % down_sample_segmentation = 5;                                               
 
@@ -15,7 +17,7 @@ down_sampling_rate = 5;                                                    % 다�
 plotting_alignment = false;                                                % 보정 과정 플롯팅 여부
 
 % 혈관 및 배경 제거 관련 변수
-vessel_threshold = 0;                                                    % 이 값보다 픽셀 값이 계속 낮으면
+vessel_threshold = 0;                                                      % 이 값보다 픽셀 값이 계속 낮으면
                                                                            % 혈관 또는 배경으로 보고 제거 (기본값 = 0.1)
 % Segmentation 관련 변수
 space_down_samp_rate = 1;                                                  % 공간상 다운 샘플링 (기본값 = 2)
@@ -65,12 +67,24 @@ ms = msMeanFrame(ms,down_sampling_rate);                                   % 평�
 %% Manually inspect and select best alignment
 ms = msSelectAlignment(ms);         
 
-%% Thresholding for vessel & blot elimination - added by Kwang
-% if signal is too low, regard it as artifact
-ms = msVesselRemoval(ms, vessel_threshold);
-
 %% Export aligned video as .avi file
 msExportAligned(ms, true);
+
+%% Play exported .mat file
+
+% handle = implay(Y); 
+% handle.Visual.ColorMap.UserRange = 1;
+% handle.Visual.ColorMap.UserRangeMin = min(Y(:));
+% handle.Visual.ColorMap.UserRangeMax = max(Y(:));
+% handle.Visual.ColorMap.Map = gray;
+
+
+
+%% Replaced by CNMF-E codes below here
+% 이 아래쪽 코드는 PCA/ICA 기반 segmentation method 였으나 CNMF-E로
+% segmentation 하게 되면서 더 이상 사용하지 않게 됨
+
+
 
 % %% Segment Sessions
 % % dFF만 넘겨주면 다른 method로 segmentation

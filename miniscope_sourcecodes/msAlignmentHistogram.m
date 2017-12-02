@@ -4,13 +4,14 @@ function msAlignmentHistogram(ms,bins)
     if (isempty(bins))
         bins = -20:20;
     end
+    figure;
     alignH2 = hist2(ms.hShift ,ms.wShift,bins,bins);
-    pcolorCentered(bins,bins,log10(alignH2));
-    colormap jet
+    pcolorCentered(bins,bins,log10(alignH2'));
+    colormap parula
 %     colorbar
     xlabel('Horizontal Shift (px)')
     ylabel('Vertical Shift (px)');
-    hcb=colorbar
+    hcb=colorbar;
 
     ylabel(hcb,'Log10(Number of Frames)')
     

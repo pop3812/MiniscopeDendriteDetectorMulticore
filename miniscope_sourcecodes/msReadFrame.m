@@ -16,7 +16,6 @@ function frame = msReadFrame(ms,frameNum,columnCorrect, align, dFF)
     if (align)
         frame = frame(((max(ms.hShift(:,ms.selectedAlignment))+1):(end+min(ms.hShift(:,ms.selectedAlignment))-1))-ms.hShift(frameNum,ms.selectedAlignment), ...
                       ((max(ms.wShift(:,ms.selectedAlignment))+1):(end+min(ms.wShift(:,ms.selectedAlignment))-1))-ms.wShift(frameNum,ms.selectedAlignment));
-        frame(ms.vessel_position) = 0;
     end
     if (dFF)
 %         idx = ms.maxFrame{ms.selectedAlignment}<0.2*max(ms.maxFrame{ms.selectedAlignment}(:)); % need to be changed
