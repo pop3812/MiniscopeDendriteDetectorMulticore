@@ -6,9 +6,12 @@ function ms = msSelectROIs(ms)
     userInput = 'Y';
     refFrameNumber = ceil(ms.numFrames/2);
     refFrame = msReadFrame(ms,refFrameNumber,true,false,false);
-         
+    
+    himage = figure;
+    figure(himage)
+    
     if (isfield(ms,'alignmentROI'))  %checks if alignmentROIs already exsist
-        imshow(uint8(refFrame), [min(ms.minFluorescence) max(ms.maxFluorescence)])
+        imshow(uint8(refFrame), [min(ms.minFluorescence) max(ms.maxFluorescence)]);
         hold on
         for ROINum = 1:size(ms.alignmentROI,2)
             rectangle('Position', ms.alignmentROI(:,ROINum),'LineWidth',1,'EdgeColor', [1 0 0],'LineStyle','--');
@@ -22,7 +25,7 @@ function ms = msSelectROIs(ms)
         idx = isfield(ms,temp);
         ms = rmfield(ms,temp(idx));
 
-        imshow(uint8(refFrame))
+        imshow(uint8(refFrame));
         hold on
         while (strcmp(userInput,'Y'))
             numROIs = numROIs+1;
@@ -36,6 +39,8 @@ function ms = msSelectROIs(ms)
             rectangle('Position',rect,'LineWidth',1, 'EdgeColor', [1 0 0], 'LineStyle','--');
             userInput = 'N'; % changed
             display('ROI Selection has been completed.');
+            
+            saveas(himage, [ms.outputPath, '\alignment_selected_ROI.png']);
 %             userInput = upper(input('Select another ROI? (Y/N)','s'));
         end
     end 

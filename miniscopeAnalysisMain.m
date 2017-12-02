@@ -10,27 +10,12 @@ use_parallel_processing = 1;                                               % 멀�
 % 파일 읽기 관련 변수
 % file_path = 'D:\Data\20171201_CAG\tail_suspension_1';                                        
 file_path = uigetdir('','Select Directory of Your Experiment');            % 데이터 디렉토리
+
 down_sampling_rate = 5;                                                    % 다운 샘플링 (프레임) 
 % down_sample_segmentation = 5;                                               
 
 % 흔들림 보정 관련 변수
 plotting_alignment = false;                                                % 보정 과정 플롯팅 여부
-
-% 혈관 및 배경 제거 관련 변수
-vessel_threshold = 0;                                                      % 이 값보다 픽셀 값이 계속 낮으면
-                                                                           % 혈관 또는 배경으로 보고 제거 (기본값 = 0.1)
-% Segmentation 관련 변수
-space_down_samp_rate = 1;                                                  % 공간상 다운 샘플링 (기본값 = 2)
-smwidth = 3;                                                               % Smoothing 필터 크기 (기본값 = 3)
-thresh = 2;                                                                % Segment detection threshold (기본값 = 2)
-arealims = [100 2500];                                                     % Segment 크기 제한 (기본값 = 750) [400 1800]
-plotting_segment = 1;                                                      % Segmentation 과정 플롯팅 여부
-
-% Deconvolution 관련 변수
-deconvtau = 400;                                                           % Deconvolution filter tau 값
-                                                                           % 참고: tau-on = 74ms, tau-off = 400ms for GCaMP6f
-spike_thresh = 2;                                                          % Spike threshold S.D. (기본값 = 2)
-normalization = 1;                                                         % Normalization 여부
 
 %% Parallel processing preparation (pooling)
 pool_connected=gcp;
@@ -46,6 +31,14 @@ ms = msGenerateVideoObj(file_path,'msCam');
 ms = msColumnCorrection(ms,down_sampling_rate);                            % analog-to-digital converting noise 제거
 ms = msFluorFrameProps(ms);                                                % flourescence 세기 특성 분석 (max, min, mean)
 
+%% Generates the output directory
+date_tag = datestr(datenum(ms.date),'yyyymmmdd_HHMMSS');
+ms.outputPath = [ms.vidObj{1}.Path, '\aligned_', date_tag];
+if (exist(ms.outputPath, 'dir') == 0)
+    disp(['Made a result directory at :', newline, char(9), ms.outputPath]);
+    mkdir(ms.outputPath);
+end
+    
 %% Select fluorescnece thesh for good frames
 % ms = msSelectFluorThresh(ms);                                            % 사용자가 threshold를 보고 직접 선택
 fluorThresh = 0.75 * mean(ms.meanFluorescence);
@@ -85,6 +78,19 @@ msExportAligned(ms, true);
 % segmentation 하게 되면서 더 이상 사용하지 않게 됨
 
 
+
+% % Segmentation 관련 변수
+% space_down_samp_rate = 1;                                                  % 공간상 다운 샘플링 (기본값 = 2)
+% smwidth = 3;                                                               % Smoothing 필터 크기 (기본값 = 3)
+% thresh = 2;                                                                % Segment detection threshold (기본값 = 2)
+% arealims = [100 2500];                                                     % Segment 크기 제한 (기본값 = 750) [400 1800]
+% plotting_segment = 1;                                                      % Segmentation 과정 플롯팅 여부
+% 
+% % Deconvolution 관련 변수
+% deconvtau = 400;                                                           % Deconvolution filter tau 값
+%                                                                            % 참고: tau-on = 74ms, tau-off = 400ms for GCaMP6f
+% spike_thresh = 2;                                                          % Spike threshold S.D. (기본값 = 2)
+% normalization = 1;                                                         % Normalization 여부
 
 % %% Segment Sessions
 % % dFF만 넘겨주면 다른 method로 segmentation

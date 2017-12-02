@@ -8,16 +8,12 @@ if nargin < 2
 end
 
 hSmall = fspecial('average', 2);
-date_tag = datestr(datetime('now'), 'yyyymmmdd_HHMMSS');
-dirpath = [ms.vidObj{1}.Path, '\aligned_', date_tag];
+dirpath = ms.outputPath;
 
 % filename =  [dirpath, '\', ms.vidObj{1}.Name];
 % filename = strrep(filename,'.avi','_aligned.avi');
 filename = [dirpath, '\miniscope_data_aligned.avi'];
 
-if (exist(dirpath, 'dir') == 0)
-    disp(['Made a result directory.']); mkdir(dirpath); end
-    
 v = VideoWriter(filename);
 v.FrameRate = 30;
 
@@ -71,7 +67,6 @@ close(v);
 
 % Save alignment histogram
 msAlignmentHistogram(ms,[]);
-saveas(gcf, [dirpath, '\alignment_histogram.png']);
 
 % Save parameters
 save([dirpath, '\parameters.mat'],'ms','-v7.3');
